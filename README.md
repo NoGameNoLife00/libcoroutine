@@ -1,2 +1,2 @@
 # libcoroutine
-基于c++ coroutines的协程库
+基于c++20的协程库
