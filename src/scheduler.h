@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <task.h>
 #include <co_type_traits.h>
+#include <spinlock.h>
+#include <timer.h>
 
 namespace libcoro {
     class Scheduler : public std::enable_shared_from_this<Scheduler> {
@@ -20,17 +22,17 @@ namespace libcoro {
         void RunUtilNoTask();
 
         template<typename T>
-        requires(traits::IsCallableV(T) || traits::IsFutureV(T) || traits::IsGeneratorV(T))
+        requires(traits::IsCallableV<T> || traits::IsFutureV<T> || traits::IsGeneratorV<T>)
         Task* operator+(T&& coro) {
-            if constexpr (traits::is_callable_v(T))
+            if constexpr (traits::IsCallableV<T>)
                 return NewTask(new TaskCtxImpl<T>(coro));
             else
                 return NewTask(new TaskImpl<T>(coro));
         }
 
         bool Empty() const {
-            scope_lock<Spinlock, Spinlock> guard(lock_ready_, lock_running_);
-            return ready_task_.Empty() && running_states_.Empty() && timer_.Empty();
+            scoped_lock<spinlock, spinlock> guard(lock_ready_, lock_running_);
+            return ready_task_.empty() && running_states_.empty() && timer_->Empty();
         }
 
         TimerManager* Timer() const {
@@ -47,16 +49,16 @@ namespace libcoro {
     protected:
         Scheduler();
     private:
-        using StateBasePtr = UsePtr<StateBase>;
+        using StateBasePtr = use_ptr<StateBase>;
         using StateArray = std::vector<StateBasePtr>;
-        using LockType = Spinlock;
+        using LockType = spinlock;
         using TaskDictionaryType = std::unordered_map<StateBase*, std::unique_ptr<Task>>;
 
-        mutable Spinlock lock_running_;
+        mutable spinlock lock_running_;
 
         StateArray running_states_;
         StateArray cached_states_;
-        mutable Spinlock lock_ready_;
+        mutable spinlock lock_ready_;
 
         TaskDictionaryType ready_task_;
 

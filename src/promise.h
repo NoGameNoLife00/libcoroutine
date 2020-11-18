@@ -3,6 +3,8 @@
 
 #include <type_traits>
 #include <co_type_traits.h>
+#include <state.h>
+#include <future.h>
 namespace libcoro {
     struct suspend_on_initial {
         inline bool await_ready() {
@@ -34,9 +36,41 @@ namespace libcoro {
     };
 
     template <typename Tp>
-    struct PromiseImpl {
+    class PromiseImpl {
+    public:
         using ValueType = Tp;
         using StateType = State<ValueType>;
+        using PromiseType = Promise<ValueType>;
+        using FutureType = Future<ValueType>;
+
+        PromiseImpl() = default;
+        PromiseImpl(PromiseImpl&&) = default;
+        PromiseImpl& operator=(PromiseImpl&&) = default;
+        PromiseImpl(const  PromiseImpl&) = delete;
+        PromiseImpl operator=(const PromiseImpl&) = delete;
+
+        StateType* GetState();
+        StateType* RefState();
+
+        FutureType GetReturnObject() {
+            return {this->GetState()};
+        }
+
+        suspend_on_initial initial_suspend() {
+            return {};
+        }
+
+        suspend_on_final final_suspend() {
+            return {};
+        }
+
+        template<typename Uty>
+        Uty&& await_transform(Uty&& whatever) {
+            if constexpr (traits::HasStateV<Uty>) {
+                whatever.state_->SetScheduler(GetState().GetScheduler());
+            }
+        }
+
     };
 }
 

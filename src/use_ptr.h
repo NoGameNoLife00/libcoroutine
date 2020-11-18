@@ -5,27 +5,28 @@
 
 namespace libcoro {
     template <typename T>
-    class UsePtr {
-        UsePtr() = default;
-        UsePtr(const UsePtr& up) : p_(up.p_) {
+    class use_ptr {
+    public:
+        use_ptr() = default;
+        use_ptr(const use_ptr& up) : p_(up.p_) {
             lock_();
         }
 
-        UsePtr(T* p) : p_(p) {
+        use_ptr(T* p) : p_(p) {
             lock_();
         }
 
-        UsePtr(UsePtr&& up) : p_(std::exchange(up.p_, nullptr)) {}
+        use_ptr(use_ptr&& up) : p_(std::exchange(up.p_, nullptr)) {}
 
-        UsePtr& operator=(const UsePtr& up) {
+        use_ptr& operator=(const use_ptr& up) {
             if (&up != this) {
-                UsePtr t(up);
+                use_ptr t(up);
                 std::swap(p_, t.p_);
             }
             return *this;
         }
 
-        UsePtr& operator=(UsePtr&& up) {
+        use_ptr& operator=(use_ptr&& up) {
             if (&up != this) {
                 std::swap(p_, up.p_);
                 up.unlock_();
@@ -33,23 +34,23 @@ namespace libcoro {
             return *this;
         }
 
-        void Swap(UsePtr& up) {
+        void swap(use_ptr& up) {
             std::swap(p_, up.p_);
-        }
-
-        ~UsePtr() {
-            unlock_();
         }
 
         T* operator->() const {
             return p_;
         }
 
-        T* Get() const {
+        T* get() const {
             return p_;
         }
 
-        void Reset() {
+        void reset() {
+            unlock_();
+        }
+
+        ~use_ptr() {
             unlock_();
         }
 
@@ -78,30 +79,30 @@ namespace libcoro {
     };
 
     template<typename T, typename U>
-    inline bool operator==(const UsePtr<T>& left, const UsePtr<U>& right) {
+    inline bool operator==(const use_ptr<T>& left, const use_ptr<U>& right) {
         return left.get() == right.get();
     }
     template<typename T>
-    inline bool operator==(const UsePtr<T>& left, std::nullptr_t) {
+    inline bool operator==(const use_ptr<T>& left, std::nullptr_t) {
        return left.get() == nullptr;
     }
     template<typename T>
-    inline bool operator==(std::nullptr_t, const UsePtr<T>& left) {
+    inline bool operator==(std::nullptr_t, const use_ptr<T>& left) {
         return left.get() == nullptr;
     }
     template <typename T>
-    inline bool operator!=(const UsePtr<T>& left, std::nullptr_t) {
+    inline bool operator!=(const use_ptr<T>& left, std::nullptr_t) {
        return left.get() != nullptr;
     }
     template <typename T>
-    inline bool operator != (std::nullptr_t, const UsePtr<T>& left) {
+    inline bool operator != (std::nullptr_t, const use_ptr<T>& left) {
        return left.get() != nullptr;
     }
 
 }
 namespace std {
     template<typename T>
-    inline void swap(libcoro::UsePtr<T>& a, libcoro::UsePtr<T>& b) {
+    inline void swap(libcoro::use_ptr<T>& a, libcoro::use_ptr<T>& b) {
         a.swap(b);
     }
 }

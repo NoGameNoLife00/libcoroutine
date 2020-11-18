@@ -25,7 +25,7 @@ namespace libcoro {
 
     class StateBase;
 
-    class Spinlock;
+    class spinlock;
 
     template <typename Type = std::nullptr_t, typename Alloc = std::allocator<char>>
     class Generator;
