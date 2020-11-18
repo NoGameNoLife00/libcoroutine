@@ -37,4 +37,19 @@ namespace libcoro {
     bool StateGenerator::HasHandler() const {
         return false;
     }
+
+    void StateFuture::Resume() {
+    }
+
+    bool StateFuture::HasHandler() const {
+        return false;
+    }
+
+    StateBase *StateFuture::GetParent() const {
+        return StateBase::GetParent();
+    }
+
+    void StateFuture::DestroyDeallocate() {
+
+    }
 }

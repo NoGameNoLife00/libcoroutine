@@ -1,11 +1,125 @@
 #ifndef LIBCOROUTINE_TIMER_H
 #define LIBCOROUTINE_TIMER_H
 #include <define.h>
+#include <functional>
+#include <map>
+
 namespace libcoro {
     class TimerManager;
 
     typedef std::shared_ptr<TimerManager> TimerMgrPtr;
     typedef std::weak_ptr<TimerManager> TimerMgrWPtr;
+
+    namespace detail {
+        using TimerClockType = std::chrono::system_clock;
+        using TimerCallbackType = std::function<void(bool)>;
+
+        class TimerTarget : public std::enable_shared_from_this<TimerTarget> {
+        public:
+            TimerTarget(const TimerClockType::time_point& tp, const TimerCallbackType &cb)
+                : tp_(tp), cb_(cb){}
+            TimerTarget(const TimerClockType::time_point& tp, TimerCallbackType && cb)
+                : tp_(tp), cb_(std::forward<TimerCallbackType>(cb)) {}
+            friend TimerManager;
+        private:
+            enum class State : uint32_t {
+                Invalid,
+                Added,
+                Running,
+            };
+            TimerClockType::time_point tp_;
+            TimerCallbackType cb_;
+            State st_ = State::Invalid;
+        };
+
+        typedef std::shared_ptr<TimerTarget> TimerTargetPtr;
+        typedef std::weak_ptr<TimerTarget> TimerTargetWPtr;
+    }
+
+    class TimerHandler {
+    public:
+        TimerHandler() = default;
+        TimerHandler(const TimerHandler&) = default;
+        TimerHandler& operator=(const TimerHandler&) = default;
+        TimerHandler(TimerHandler && r)
+        : manager_(std::move(r.manager_)), target_(std::move(r.target_))  {}
+
+        TimerHandler& operator=(TimerHandler&& r) {
+            if (this != &r) {
+                manager_ = std::move(r.manager_);
+                target_ = std::move(r.target_);
+            }
+            return *this;
+        }
+        TimerHandler(TimerManager* manager, const detail::TimerTargetPtr& target) : manager_(manager->shared_from_this()), target_(target) {}
+
+        void Reset();
+        void Stop();
+        void Expired() const;
+    private:
+        TimerMgrWPtr manager_;
+        detail::TimerTargetWPtr target_;
+    };
+
+    class TimerManager : public std::enable_shared_from_this<TimerManager> {
+    public:
+        using TimerTarget = detail::TimerTarget;
+        using TimerTargetPtr = detail::TimerTargetPtr;
+        using ClockType = detail::TimerClockType;
+        using DurationType = ClockType::duration;
+        using TimePointType = ClockType::time_point;
+        using TimerArrayType = std::vector<TimerTargetPtr>;
+        using TimerMapType = std::multimap<ClockType::time_point, TimerTargetPtr>;
+
+        TimerManager();
+        ~TimerManager();
+
+        template<class Rep, class Period, class Cb>
+        TimerTargetPtr Add(const std::chrono::duration<Rep, Period>& dt, Cb cb) {
+            return Add_(std::chrono::duration_cast<DurationType>(dt), std::forward<Cb>(cb));
+        }
+
+        template<class Clock, class Duration = typename Clock::duration, class Cb>
+        TimerTargetPtr Add(const std::chrono::time_point<Clock, Duration>& tp, Cb cb) {
+            return Add_(std::chrono::time_point_cast<DurationType>(tp), std::forward<Cb>(cb));
+        }
+
+        template<class Rep, class Period, class Cb>
+        TimerHandler AddHandler(const std::chrono::duration<Rep, Period>& dt, Cb& cb) {
+            return {this, Add(dt, std::forward<Cb>(cb))};
+        }
+
+        template<class Clock, class Duration = typename Clock::duration, class Cb>
+        TimerHandler AddHandler(const std::chrono::time_point<Clock, Duration>& tp, Cb&& cb) {
+            return {this, Add(tp, std::forward<Cb>(cb))};
+        }
+
+        bool Stop(const TimerTargetPtr& tt);
+
+        inline bool Empty() const {
+            return running_timers_.empty() && added_timers_.empty();
+        }
+        void Clear();
+        void Update();
+
+
+    private:
+        Spinlock added_mtx;
+        TimerArrayType  added_timers_;
+        TimerMapType running_timers_;
+
+        template<class Cb>
+        TimerTargetPtr Add_(const DurationType& dt, Cb&& cb) {
+            return Add_(std::make_shared<TimerTarget>(ClockType::now() + dt, std::forward<Cb>(cb)));
+        }
+
+        template<class Cb>
+        TimerTarget Add_(const TimePointType& tp, Cb&& cb) {
+            return Add_(std::make_shared<TimerTarget>(tp, std::forward<Cb>(cb)));
+        }
+        TimerTargetPtr Add_(const TimerTargetPtr& tt);
+        static void CallTarget(const TimerTargetPtr& tt, bool cancel);
+    };
 }
 
 

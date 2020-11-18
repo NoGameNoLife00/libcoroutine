@@ -29,7 +29,7 @@ namespace libcoro {
         }
 
         bool Empty() const {
-            scope_lock<SpinLock, SpinLock> guard(lock_ready_, lock_running_);
+            scope_lock<Spinlock, Spinlock> guard(lock_ready_, lock_running_);
             return ready_task_.Empty() && running_states_.Empty() && timer_.Empty();
         }
 
@@ -49,14 +49,14 @@ namespace libcoro {
     private:
         using StateBasePtr = UsePtr<StateBase>;
         using StateArray = std::vector<StateBasePtr>;
-        using LockType = SpinLock;
+        using LockType = Spinlock;
         using TaskDictionaryType = std::unordered_map<StateBase*, std::unique_ptr<Task>>;
 
-        mutable SpinLock lock_running_;
+        mutable Spinlock lock_running_;
 
         StateArray running_states_;
         StateArray cached_states_;
-        mutable SpinLock lock_ready_;
+        mutable Spinlock lock_ready_;
 
         TaskDictionaryType ready_task_;
 

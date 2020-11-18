@@ -14,7 +14,7 @@ namespace libcoro::traits {
     struct IsFuture : std::false_type {};
     template<class Tp>
     struct IsFuture<Tp,
-            std::void_t<decltype(std::declval<Tp>()._state),
+            std::void_t<decltype(std::declval<Tp>().state_),
                         typename Tp::ValueType,
                         typename Tp::StateType,
                         typename Tp::PromiseType>
@@ -28,6 +28,13 @@ namespace libcoro::traits {
     struct IsGenerator<Generator<Tp, Alloc>> : std::true_type {};
     template<class Tp>
     constexpr bool IsGeneratorV = IsGenerator<RemoveCvrefT<Tp>>::value;
+
+    template<class Tp>
+    struct IsPromise : std::false_type {};
+    template<class Tp>
+    struct IsPromise<Promise<Tp>> : std::true_type {};
+    template<class Tp>
+    constexpr bool IsPromiseV = IsPromise<RemoveCvref<Tp>>::value;
 }
 
 #endif //LIBCOROUTINE_TYPE_TRAITS_H

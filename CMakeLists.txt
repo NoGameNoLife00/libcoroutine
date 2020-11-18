@@ -10,7 +10,10 @@ message(STATUS "C++ flags: ${CMAKE_CXX_FLAGS}")
 
 include_directories(src)
 
-set(SRC src/state.cpp)
+
+file(GLOB_RECURSE SRC LIST_DIRECTORIES true src/*.h src/*.cpp)
+#set(SRC src/state.cpp
+#        src/scheduler.cpp)
 
 add_library(libcoroutine STATIC ${SRC})
 set_property(TARGET libcoroutine  PROPERTY CXX_STANDARD 20)
