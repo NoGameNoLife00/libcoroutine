@@ -46,7 +46,6 @@ namespace libcoro {
         Task* FindTask(StateBase* s) const;
         friend class LocalScheduler;
         static Scheduler g_scheduler;
-
     protected:
         Scheduler();
     private:

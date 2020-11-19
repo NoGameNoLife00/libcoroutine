@@ -5,8 +5,8 @@
 #include <memory>
 #include <cstddef>
 #include <coroutine>
-#include "spinlock.h"
-#include "co_type_traits.h"
+#include <spinlock.h>
+#include <co_type_traits.h>
 
 namespace libcoro {
     class StateBase {
@@ -23,7 +23,9 @@ namespace libcoro {
         }
         virtual void Resume() = 0;
         virtual bool HasHandler() const = 0;
-        virtual StateBase* GetParent() const;
+        virtual StateBase* GetParent() const {
+            return nullptr;
+        }
 
         void SetScheduler(Scheduler* sch) {
             scheduler_ = sch;
@@ -49,7 +51,7 @@ namespace libcoro {
     protected:
         Scheduler* scheduler_ = nullptr;
         coroutine_handle<> coro_;
-        virtual ~StateBase();
+        virtual ~StateBase() {}
     private:
         virtual void DestroyDeallocate();
         std::atomic<intptr_t> count_{0};
@@ -57,8 +59,8 @@ namespace libcoro {
 
     class StateGenerator : public StateBase {
     public:
-        virtual void Resume() override;
-        virtual bool HasHandler() const override;
+        void Resume() override;
+        bool HasHandler() const override;
 
         void SetInitialSuspend(coroutine_handle<> handler) {
             coro_ = handler;
@@ -69,10 +71,10 @@ namespace libcoro {
         }
 
         static StateGenerator* AllocState();
-
+        bool SwitchSchedulerAwaitSuspend(Scheduler* sch);
     private:
         StateGenerator() = default;
-        virtual void DestroyDeallocate() override;
+        void DestroyDeallocate() override;
 
     };
 
@@ -90,9 +92,9 @@ namespace libcoro {
         };
         typedef spinlock LockType;
         void DestroyDeallocate() override;
-        virtual void Resume() override;
-        virtual bool HasHandler() const override;
-        virtual StateBase *GetParent() const override;
+        void Resume() override;
+        bool HasHandler() const override;
+        StateBase *GetParent() const override;
         inline bool IsReady() const {
             if (_offset_of(StateFuture, is_future_) - _offset_of(StateFuture, hase_value_) == 1) {
                 return 0 != reinterpret_cast<const std::atomic<uint16_t> &>(hase_value_).load(std::memory_order_acquire);
@@ -113,7 +115,7 @@ namespace libcoro {
         }
 
         template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void FutureAwaitSuspend(coroutine_handle<PromiseT> handler);
+        void FutureAwaitSuspend(coroutine_handle<PromiseT> handler)
 
         bool SwitchSchedulerAwaitSuspend(Scheduler* sch);
 
@@ -151,7 +153,7 @@ namespace libcoro {
             is_future_ = !await;
         }
 
-        mutable LockType mtx;
+        mutable LockType mtx_;
         coroutine_handle<> init_co_;
         StateFuture* parent_ = nullptr;
 #ifdef LIBCORO
@@ -250,6 +252,38 @@ namespace libcoro {
     private:
         std::exception_ptr exception_;
     };
+
+
+
+
+
+
+
+
+
+
+    // ------------------------------------
+    template<class PromiseT, typename Enable>
+    void StateFuture::PromiseInitialSuspend(coroutine_handle<PromiseT> handler) {
+        PromiseT promise = handler.promise();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 

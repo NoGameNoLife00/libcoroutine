@@ -1,5 +1,6 @@
 
 #include "state.h"
+#include <scheduler.h>
 
 namespace libcoro {
 
@@ -24,7 +25,12 @@ namespace libcoro {
         if (likely(coro_)) {
             coro_.resume();
             if (likely(!coro_.done())) {
-                scheduler_;
+                scheduler_->AddGenerator(this);
+            } else {
+                coroutine_handle<> handler = coro_;
+                coro_ = nullptr;
+                scheduler_->DelFinal(this);
+                handler.destroy();
             }
         }
     }
@@ -40,14 +46,58 @@ namespace libcoro {
     }
 
     bool StateGenerator::HasHandler() const {
-        return false;
+        return (bool)coro_;
+    }
+
+    bool StateGenerator::SwitchSchedulerAwaitSuspend(Scheduler* sch) {
+        assert(sch);
+        if (scheduler_) {
+            if (scheduler_ == sch) {
+                return false;
+            }
+            auto task = scheduler_->DelSwitch(this);
+            scheduler_ = sch;
+            if (task) {
+                sch->AddSwitch(std::move(task));
+            }
+        } else {
+            scheduler_ = sch;
+        }
+        return true;
     }
 
     void StateFuture::Resume() {
+        std::unique_lock<LockType> guard(mtx_);
+        if (is_init_co_ == InitType::Initial) {
+            assert((bool)init_co_);
+            coroutine_handle<> handler = init_co_;
+            is_init_co_ = InitType::None;
+            guard.unlock();
+            handler.resume();
+            return;
+        }
+        if (coro_) {
+            coroutine_handle<> handle = coro_;
+            coro_ = nullptr;
+            guard.unlock();
+
+            handle.resume();
+            return;
+        }
+        if (is_init_co_ == InitType::Final) {
+            assert((bool)init_co_);
+            coroutine_handle<> handler = init_co_;
+            is_init_co_ = InitType::None;
+            guard.unlock();
+
+            handler.resume();
+            return;
+        }
     }
 
     bool StateFuture::HasHandler() const {
-        return false;
+        scoped_lock<LockType> guard(mtx_);
+        return HasHandlerSkipLock();
     }
 
     StateBase *StateFuture::GetParent() const {
@@ -55,7 +105,35 @@ namespace libcoro {
     }
 
     void StateFuture::DestroyDeallocate() {
+        size_t size = alloc_size_;
+#ifdef LIBCORO_DEBUG
+        printf("DestroyDeallocate, size=%d\n", size);
+#endif
+        this->~StateFuture();
+        AllocChar al;
+        return al.deallocate(reinterpret_cast<char*>(this), size);
+    }
 
+    bool StateFuture::SwitchSchedulerAwaitSuspend(Scheduler *sch) {
+        assert(sch);
+        scoped_lock<LockType> guard(mtx_);
+        if (scheduler_) {
+            if (scheduler_ == sch) {
+                return false;
+            }
+            auto task = scheduler_->DelSwitch(this);
+            scheduler_ = sch;
+            if (task) {
+                sch->AddSwitch(std::move(task));
+            }
+        } else {
+            scheduler_ = sch;
+        }
+
+        if (parent_) {
+            parent_->SwitchSchedulerAwaitSuspend(sch);
+        }
+        return true;
     }
 
 
