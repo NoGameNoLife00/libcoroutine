@@ -7,6 +7,7 @@
 #include <coroutine>
 #include <spinlock.h>
 #include <co_type_traits.h>
+#include <scheduler.h>
 
 namespace libcoro {
     class StateBase {
@@ -115,7 +116,7 @@ namespace libcoro {
         }
 
         template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void FutureAwaitSuspend(coroutine_handle<PromiseT> handler)
+        void FutureAwaitSuspend(coroutine_handle<PromiseT> handler);
 
         bool SwitchSchedulerAwaitSuspend(Scheduler* sch);
 
@@ -255,22 +256,49 @@ namespace libcoro {
 
 
 
-
-
-
-
-
-
-
     // ------------------------------------
     template<class PromiseT, typename Enable>
     void StateFuture::PromiseInitialSuspend(coroutine_handle<PromiseT> handler) {
-        PromiseT promise = handler.promise();
+        assert(scheduler_ == nullptr);
+        assert(!coro_);
+
+        init_co_ = handler;
+        is_init_co_ = InitType::Initial;
+    }
+
+    template<class PromiseT, typename Enable>
+    void StateFuture::PromiseFinalSuspend(coroutine_handle<PromiseT> handler) {
+        scoped_lock<LockType> guard(mtx_);
+        init_co_ = handler;
+        is_init_co_ = InitType::Final;
+
+        Scheduler* sch = GetScheduler();
+        assert(sch);
+
+        if (HasHandlerSkipLock()) {
+            sch->GetGenerator(this);
+        }
+        sch->DelFinal(this);
     }
 
 
-
-
+    template<class PromiseT, typename Enable>
+    void StateFuture::FutureAwaitSuspend(coroutine_handle<PromiseT> handler) {
+        PromiseT& promise = handler.promise();
+        auto* parent_state = promise.GetState();
+        Scheduler* sch = parent_state.GetScheduler();
+        scoped_lock<LockType> guard(mtx_);
+        if (this != parent_state) {
+            parent_ = parent_state;
+            _scheduler = sch;
+        }
+        if (!coro_) {
+            coro_ = handler;
+        }
+        if (sch != nullptr && IsReady()) {
+            sch->AddGenerator(this);
+        }
+    }
 
 
 
