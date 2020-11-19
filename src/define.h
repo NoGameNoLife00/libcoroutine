@@ -6,6 +6,7 @@
 #include <memory>
 #include <mutex>
 #include <macro_define.h>
+#include <stop_token>
 
 
 #if LIBCORO_DEBUG
@@ -41,6 +42,15 @@ namespace libcoro {
     template<class... Mutexes>
     using scoped_lock = std::scoped_lock<Mutexes...>;
 
+    using stop_token = std::stop_token;
+    using stop_source = std::stop_source;
+
+    template<typename Callback>
+    using stop_callback = std::stop_callback<Callback>;
+    using std::nostopstate;
+
+
+    Scheduler* ThisScheduler();
     template<class T>
     constexpr size_t AlignSize() {
         const size_t align_req = sizeof(void*) * 2;

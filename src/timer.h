@@ -16,7 +16,7 @@ namespace libcoro {
 
         class TimerTarget : public std::enable_shared_from_this<TimerTarget> {
         public:
-            TimerTarget(const TimerClockType::time_point& tp, const TimerCallbackType &cb)
+            TimerTarget(const TimerClockType::time_point& tp, const TimerCallbackType& cb)
                 : tp_(tp), cb_(cb){}
             TimerTarget(const TimerClockType::time_point& tp, TimerCallbackType && cb)
                 : tp_(tp), cb_(std::forward<TimerCallbackType>(cb)) {}
@@ -30,6 +30,9 @@ namespace libcoro {
             TimerClockType::time_point tp_;
             TimerCallbackType cb_;
             State st_ = State::Invalid;
+#if _DEBUG
+            TimerManager* manager_ = nullptr;
+#endif
         };
 
         typedef std::shared_ptr<TimerTarget> TimerTargetPtr;
@@ -41,10 +44,10 @@ namespace libcoro {
         TimerHandler() = default;
         TimerHandler(const TimerHandler&) = default;
         TimerHandler& operator=(const TimerHandler&) = default;
-        TimerHandler(TimerHandler && r)
+        inline TimerHandler(TimerHandler && r)
         : manager_(std::move(r.manager_)), target_(std::move(r.target_))  {}
 
-        TimerHandler& operator=(TimerHandler&& r) {
+        inline TimerHandler& operator=(TimerHandler&& r) {
             if (this != &r) {
                 manager_ = std::move(r.manager_);
                 target_ = std::move(r.target_);
@@ -54,8 +57,8 @@ namespace libcoro {
         TimerHandler(TimerManager* manager, const detail::TimerTargetPtr& target) : manager_(manager->shared_from_this()), target_(target) {}
 
         void Reset();
-        void Stop();
-        void Expired() const;
+        bool Stop();
+        bool Expired() const;
     private:
         TimerMgrWPtr manager_;
         detail::TimerTargetWPtr target_;
@@ -104,7 +107,7 @@ namespace libcoro {
 
 
     private:
-        Spinlock added_mtx;
+        spinlock added_mtx_;
         TimerArrayType  added_timers_;
         TimerMapType running_timers_;
 
@@ -118,8 +121,34 @@ namespace libcoro {
             return Add_(std::make_shared<TimerTarget>(tp, std::forward<Cb>(cb)));
         }
         TimerTargetPtr Add_(const TimerTargetPtr& tt);
-        static void CallTarget(const TimerTargetPtr& tt, bool cancel);
+        static void CallTarget_(const TimerTargetPtr& tt, bool cancel);
     };
+
+
+
+
+
+    //--------------------
+    inline void TimerHandler::Reset() {
+        manager_.reset();
+        target_.reset();
+    }
+
+    inline bool TimerHandler::Expired() const {
+        return target_.expired();
+    }
+
+    inline bool TimerHandler::Stop() {
+        bool result = false;
+        if (!target_.expired()) {
+            auto ptr = manager_.lock();
+            if (ptr) {
+                result = ptr->Stop(target_.lock());
+            }
+            target_.reset();
+        }
+        return result;
+    }
 }
 
 

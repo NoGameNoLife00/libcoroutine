@@ -39,13 +39,14 @@ namespace libcoro {
             return timer_.get();
         }
 
-        void AddGenerator(StateBase *sb);
-        void DelGenerator(StateBase *sb);
-        std::unique_ptr<Task> DelSwitch(StateBase *sb);
+        void AddGenerator(StateBase *s);
+        void DelFinal(StateBase *s);
+        std::unique_ptr<Task> DelSwitch(StateBase *s);
         void AddSwitch(std::unique_ptr<Task> task);
-        Task* FindTask(StateBase* sb) const;
-        friend class LockScheduler;
+        Task* FindTask(StateBase* s) const;
+        friend class LocalScheduler;
         static Scheduler g_scheduler;
+
     protected:
         Scheduler();
     private:
@@ -67,6 +68,48 @@ namespace libcoro {
         Task* NewTask(Task* task);
 
     };
+
+    class LocalScheduler {
+    public:
+        LocalScheduler();
+
+        LocalScheduler(Scheduler& sch);
+
+        ~LocalScheduler();
+
+        LocalScheduler(LocalScheduler&&) = delete;
+        LocalScheduler(const LocalScheduler&) = delete;
+        LocalScheduler& operator=(LocalScheduler&&) = delete;
+        LocalScheduler& operator=(const LocalScheduler&) = delete;
+    private:
+        Scheduler* scheduler_;
+    };
+
+    inline void Scheduler::AddGenerator(StateBase *state) {
+        assert(state != nullptr);
+        scoped_lock<spinlock> guard(lock_running_);
+        running_states_.emplace_back(state);
+    }
+
+    inline void Scheduler::DelFinal(StateBase *state) {
+        scoped_lock<spinlock> guard(lock_ready_);
+        ready_task_.erase(state);
+    }
+
+    inline void Scheduler::AddSwitch(std::unique_ptr<Task> task) {
+        StateBase* state = task->state_.get();
+        scoped_lock<spinlock> guard(lock_ready_);
+        ready_task_.emplace(state, std::move(task));
+    }
+
+    inline Task* Scheduler::FindTask(StateBase* state) const {
+        scoped_lock<spinlock> guard(lock_ready_);
+        auto it = ready_task_.find(state);
+        if (it != ready_task_.end()) {
+            return it->second.get();
+        }
+        return nullptr;
+    }
 }
 
 
