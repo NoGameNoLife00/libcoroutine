@@ -2,6 +2,11 @@
 #include "state.h"
 
 namespace libcoro {
+
+    void StateBase::DestroyDeallocate() {
+        delete this;
+    }
+
         void StateGenerator::DestroyDeallocate() {
         size_t size = AlignSize<StateGenerator>();
         char* ptr = reinterpret_cast<char*>(this) + size;
@@ -52,4 +57,6 @@ namespace libcoro {
     void StateFuture::DestroyDeallocate() {
 
     }
+
+
 }
