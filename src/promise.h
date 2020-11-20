@@ -49,7 +49,7 @@ namespace libcoro {
         PromiseImpl(const  PromiseImpl&) = delete;
         PromiseImpl operator=(const PromiseImpl&) = delete;
 
-        StateType* GetState();
+        auto PromiseImpl<Tp>::GetState() -> StateType*
         StateType* RefState();
 
         FutureType GetReturnObject() {
@@ -74,7 +74,7 @@ namespace libcoro {
     };
 
     template<typename Tp>
-    auto *PromiseImpl<Tp>::GetState() ->  {
+    auto PromiseImpl<Tp>::GetState() -> StateType* {
         return nullptr;
     }
 }
