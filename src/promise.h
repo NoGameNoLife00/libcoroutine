@@ -75,7 +75,7 @@ namespace libcoro {
 
     template<typename Tp>
     auto PromiseImpl<Tp>::GetState() -> StateType* {
-        return nullptr;
+        return GetState();
     }
 }
 
