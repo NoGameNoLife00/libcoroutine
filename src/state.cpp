@@ -136,5 +136,16 @@ namespace libcoro {
         return true;
     }
 
-
+    void State<void>::SetValue() {
+        scoped_lock<LockType> guard(mtx_);
+        has_value_.store(ResultType::Value, std::memory_order_release);
+        Scheduler* sch = GetScheduler();
+        if (sch) {
+            if (HasHandlerSkipLock()) {
+                sch->AddGenerator(this);
+            } else {
+                sch->DelFinal(this);
+            }
+        }
+    }
 }

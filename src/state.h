@@ -97,10 +97,10 @@ namespace libcoro {
         bool HasHandler() const override;
         StateBase *GetParent() const override;
         inline bool IsReady() const {
-            if (_offset_of(StateFuture, is_future_) - _offset_of(StateFuture, hase_value_) == 1) {
-                return 0 != reinterpret_cast<const std::atomic<uint16_t> &>(hase_value_).load(std::memory_order_acquire);
+            if (_offset_of(StateFuture, is_future_) - _offset_of(StateFuture, has_value_) == 1) {
+                return 0 != reinterpret_cast<const std::atomic<uint16_t> &>(has_value_).load(std::memory_order_acquire);
             } else {
-                return hase_value_.load(std::memory_order_acquire) != ResultType::None || is_future_;
+                return has_value_.load(std::memory_order_acquire) != ResultType::None || is_future_;
             }
         }
         inline bool HasHandlerSkipLock() const {
@@ -112,7 +112,7 @@ namespace libcoro {
         }
 
         inline bool FutureAwaitReady() const {
-            return hase_value_.load(std::memory_order_acquire) != ResultType::None;
+            return has_value_.load(std::memory_order_acquire) != ResultType::None;
         }
 
         template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
@@ -161,7 +161,7 @@ namespace libcoro {
         intptr_t id_;
 #endif
         uint32_t alloc_size_ = 0;
-        std::atomic<ResultType> hase_value_ { ResultType::None };
+        std::atomic<ResultType> has_value_ { ResultType::None };
         bool is_future_;
         InitType is_init_co_ = InitType::None;
         static_assert(sizeof(std::atomic<ResultType>) == 1);
@@ -180,7 +180,7 @@ namespace libcoro {
         using ValueType = Tp;
 
         ~State() override {
-            switch (hase_value_.load(std::memory_order_acquire)) {
+            switch (has_value_.load(std::memory_order_acquire)) {
                 case ResultType::Value:
                     value_.~ValueType();
                     break;
@@ -192,7 +192,7 @@ namespace libcoro {
             }
         }
 
-        ValueType FutureAwaitResume();
+        auto FutureAwaitResume() -> ValueType;
 
         template<class PromiseT, class U, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
         void PromiseYieldValue(PromiseT* promise, U&& val);
@@ -222,6 +222,8 @@ namespace libcoro {
 
     };
 
+
+
     template <>
     class State<void> final : public StateFuture {
     public:
@@ -241,80 +243,13 @@ namespace libcoro {
             SetException(std::make_exception_ptr(std::move(e)));
         }
 
-        void DestroyDeallocate() override;
-
-        void Resume() override;
-
-        bool HasHandler() const override;
-
-        StateBase *GetParent() const override;
-
-
     private:
         std::exception_ptr exception_;
     };
 
-
-
-    // ------------------------------------
-    template<class PromiseT, typename Enable>
-    void StateFuture::PromiseInitialSuspend(coroutine_handle<PromiseT> handler) {
-        assert(scheduler_ == nullptr);
-        assert(!coro_);
-
-        init_co_ = handler;
-        is_init_co_ = InitType::Initial;
-    }
-
-    template<class PromiseT, typename Enable>
-    void StateFuture::PromiseFinalSuspend(coroutine_handle<PromiseT> handler) {
-        scoped_lock<LockType> guard(mtx_);
-        init_co_ = handler;
-        is_init_co_ = InitType::Final;
-
-        Scheduler* sch = GetScheduler();
-        assert(sch);
-
-        if (HasHandlerSkipLock()) {
-            sch->GetGenerator(this);
-        }
-        sch->DelFinal(this);
-    }
-
-
-    template<class PromiseT, typename Enable>
-    void StateFuture::FutureAwaitSuspend(coroutine_handle<PromiseT> handler) {
-        PromiseT& promise = handler.promise();
-        auto* parent_state = promise.GetState();
-        Scheduler* sch = parent_state.GetScheduler();
-        scoped_lock<LockType> guard(mtx_);
-        if (this != parent_state) {
-            parent_ = parent_state;
-            _scheduler = sch;
-        }
-        if (!coro_) {
-            coro_ = handler;
-        }
-        if (sch != nullptr && IsReady()) {
-            sch->AddGenerator(this);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
-
+#include "state.tpp"
 
 #endif //LIBCOROUTINE_STATE_H

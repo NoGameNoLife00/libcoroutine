@@ -1,5 +1,5 @@
 #include "scheduler.h"
-
+#include <exception.h>
 
 #if LIBCORO_DEBUG
 std::mutex g_coro_cout_mutex;
@@ -15,6 +15,28 @@ namespace libcoro {
     Scheduler* ThisScheduler() {
         return t_scheduler ? t_scheduler : &Scheduler::g_scheduler;
     }
+
+
+    const char * future_error_string[static_cast<size_t>(ErrorCode::MaxCount)] {
+      "none",
+      "not_ready",
+      "timer_canceled",
+      "not_await_lock",
+      "stop_requested",
+    };
+
+    char sz_future_error_buffer[256];
+    const char *GetErrorString(ErrorCode e, const char *class_name) {
+        if (class_name) {
+            sprintf(sz_future_error_buffer, "%s, code=%s",
+                    class_name, future_error_string[static_cast<size_t>(e)]);
+            return sz_future_error_buffer;
+        }
+        return future_error_string[static_cast<size_t>(e)];
+    }
+
+
+
 
     Task *Scheduler::NewTask(Task *task) {
         StateBase* state = task->state_.get();

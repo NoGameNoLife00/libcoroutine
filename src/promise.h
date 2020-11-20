@@ -44,7 +44,7 @@ namespace libcoro {
         using FutureType = Future<ValueType>;
 
         PromiseImpl() = default;
-        PromiseImpl(PromiseImpl&&) = default;
+        PromiseImpl(PromiseImpl&&)  noexcept = default;
         PromiseImpl& operator=(PromiseImpl&&) = default;
         PromiseImpl(const  PromiseImpl&) = delete;
         PromiseImpl operator=(const PromiseImpl&) = delete;
@@ -72,6 +72,11 @@ namespace libcoro {
         }
 
     };
+
+    template<typename Tp>
+    auto *PromiseImpl<Tp>::GetState() ->  {
+        return nullptr;
+    }
 }
 
 #endif //LIBCOROUTINE_PROMISE_H
