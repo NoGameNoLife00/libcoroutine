@@ -1,10 +1,8 @@
 #ifndef LIBCOROUTINE_PROMISE_H
 #define LIBCOROUTINE_PROMISE_H
 
-#include <type_traits>
-#include <co_type_traits.h>
-#include <state.h>
-#include <future.h>
+#include <libcoro.h>
+
 namespace libcoro {
     struct suspend_on_initial {
         inline bool await_ready() {
@@ -49,10 +47,10 @@ namespace libcoro {
         PromiseImpl(const  PromiseImpl&) = delete;
         PromiseImpl operator=(const PromiseImpl&) = delete;
 
-        auto PromiseImpl<Tp>::GetState() -> StateType*
-        StateType* RefState();
+        auto GetState() -> StateType*;
+        auto RefState() -> StateType*;
 
-        FutureType GetReturnObject() {
+        FutureType get_return_object() {
             return {this->GetState()};
         }
 
@@ -75,6 +73,14 @@ namespace libcoro {
 
     template<typename Tp>
     auto PromiseImpl<Tp>::GetState() -> StateType* {
+        size_t state_size = AlignSize<StateType>();
+        auto h = coroutine_handle<PromiseType>::from_promise(*reinterpret_cast<PromiseType*>(this));
+        char* ptr = reinterpret_cast<char*>(h.address()) - state_size;
+        return reinterpret_cast<StateType*>(ptr);
+    }
+
+    template<typename Tp>
+    auto PromiseImpl<Tp>::RefState() -> PromiseImpl::StateType * {
         return GetState();
     }
 }

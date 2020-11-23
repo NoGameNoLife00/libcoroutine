@@ -1,7 +1,7 @@
 #ifndef LIBCOROUTINE_USE_PTR_H
 #define LIBCOROUTINE_USE_PTR_H
 
-#include <utility>
+#include <libcoro.h>
 
 namespace libcoro {
     template <typename T>

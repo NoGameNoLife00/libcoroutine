@@ -1,9 +1,6 @@
 #ifndef LIBCOROUTINE_AWAITABLE_H
 #define LIBCOROUTINE_AWAITABLE_H
-#include <state.h>
-#include <future.h>
-#include <use_ptr.h>
-
+#include <libcoro.h>
 namespace libcoro {
     template<typename Tp>
     class AwaitableImpl {

@@ -1,5 +1,4 @@
-#include <cassert>
-#include "timer.h"
+#include <libcoro.h>
 namespace libcoro {
 
     TimerManager::TimerManager() {

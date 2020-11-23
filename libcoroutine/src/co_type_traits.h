@@ -1,7 +1,7 @@
 #ifndef LIBCOROUTINE_TYPE_TRAITS_H
 #define LIBCOROUTINE_TYPE_TRAITS_H
-#include <type_traits>
-#include <define.h>
+
+#include <libcoro.h>
 namespace libcoro::traits {
     template<typename Tp, class = std::void_t<>>
     struct IsCallable : std::false_type{};

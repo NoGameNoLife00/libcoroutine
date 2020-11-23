@@ -1,8 +1,6 @@
 #ifndef LIBCOROUTINE_YIELD_H
 #define LIBCOROUTINE_YIELD_H
-#include <define.h>
-#include <state.h>
-#include "use_ptr.h"
+#include <libcoro.h>
 namespace libcoro {
     class YieldAwaiter {
     public:

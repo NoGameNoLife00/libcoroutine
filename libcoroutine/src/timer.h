@@ -1,8 +1,6 @@
 #ifndef LIBCOROUTINE_TIMER_H
 #define LIBCOROUTINE_TIMER_H
-#include <define.h>
-#include <functional>
-#include <map>
+#include <libcoro.h>
 
 namespace libcoro {
     class TimerManager;
@@ -54,7 +52,7 @@ namespace libcoro {
             }
             return *this;
         }
-        TimerHandler(TimerManager* manager, const detail::TimerTargetPtr& target) : manager_(manager->shared_from_this()), target_(target) {}
+        TimerHandler(TimerManager* manager, const detail::TimerTargetPtr& target);
 
         void Reset();
         bool Stop();
@@ -125,10 +123,14 @@ namespace libcoro {
     };
 
 
-
-
-
     //--------------------
+
+    inline TimerHandler::TimerHandler(TimerManager* manager, const detail::TimerTargetPtr& target)
+    : manager_(manager->shared_from_this()), target_(target) {
+    }
+
+
+
     inline void TimerHandler::Reset() {
         manager_.reset();
         target_.reset();

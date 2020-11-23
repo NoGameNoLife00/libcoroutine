@@ -2,10 +2,7 @@
 #ifndef LIBCOROUTINE_TASK_H
 #define LIBCOROUTINE_TASK_H
 
-#include <define.h>
-#include <use_ptr.h>
-#include <co_type_traits.h>
-#include <state.h>
+#include <libcoro.h>
 
 namespace libcoro {
     class Task {

@@ -1,14 +1,6 @@
 #ifndef LIBCOROUTINE_STATE_H
 #define LIBCOROUTINE_STATE_H
-#include <atomic>
-#include <define.h>
-#include <memory>
-#include <cstddef>
-#include <coroutine>
-#include <spinlock.h>
-#include <co_type_traits.h>
-#include <scheduler.h>
-
+#include <libcoro.h>
 namespace libcoro {
     class StateBase {
     public:
@@ -250,6 +242,6 @@ namespace libcoro {
 }
 
 
-#include "state.tpp"
+//#include "state.tpp"
 
 #endif //LIBCOROUTINE_STATE_H

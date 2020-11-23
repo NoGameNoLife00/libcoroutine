@@ -1,14 +1,7 @@
 #ifndef LIBCOROUTINE_DEFINE_H
 #define LIBCOROUTINE_DEFINE_H
 
-#include <coroutine>
-#include <cstdlib>
-#include <memory>
-#include <mutex>
-#include <macro_define.h>
-#include <stop_token>
-
-
+#include <libcoro.h>
 #if LIBCORO_DEBUG
 extern std::mutex g_coro_cout_mutex;
 extern std::atomic<intptr_t> g_coro_state_count;

@@ -1,6 +1,5 @@
 
-#include "state.h"
-#include "exception.h"
+#include <libcoro.h>
 
 namespace libcoro {
     template<class PromiseT, typename Enable>

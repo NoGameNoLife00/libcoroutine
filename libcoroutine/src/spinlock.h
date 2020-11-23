@@ -1,10 +1,7 @@
 #ifndef LIBCOROUTINE_SPINLOCK_H
 #define LIBCOROUTINE_SPINLOCK_H
 
-#include <atomic>
-#include <cstdlib>
-#include <thread>
-#include <cassert>
+#include <libcoro.h>
 
 namespace libcoro {
     class spinlock {

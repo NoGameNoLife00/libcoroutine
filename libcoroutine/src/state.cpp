@@ -1,6 +1,5 @@
 
-#include "state.h"
-#include <scheduler.h>
+#include <libcoro.h>
 
 namespace libcoro {
 

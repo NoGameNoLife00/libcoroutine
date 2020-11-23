@@ -1,13 +1,6 @@
 #ifndef LIBCOROUTINE_SCHEDULER_H
 #define LIBCOROUTINE_SCHEDULER_H
-#include <define.h>
-#include <use_ptr.h>
-#include <vector>
-#include <unordered_map>
-#include <task.h>
-#include <co_type_traits.h>
-#include <spinlock.h>
-#include <timer.h>
+#include <libcoro.h>
 
 namespace libcoro {
     class Scheduler : public std::enable_shared_from_this<Scheduler> {

@@ -1,8 +1,6 @@
 #ifndef LIBCOROUTINE_FUTURE_H
 #define LIBCOROUTINE_FUTURE_H
-#include <define.h>
-#include <state.h>
-#include <use_ptr.h>
+#include <libcoro.h>
 namespace libcoro {
     template<typename Tp>
     class Future {

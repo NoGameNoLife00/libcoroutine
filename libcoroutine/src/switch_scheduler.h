@@ -1,7 +1,6 @@
 #ifndef LIBCOROUTINE_SWITCH_SCHEDULER_H
 #define LIBCOROUTINE_SWITCH_SCHEDULER_H
-#include <state.h>
-#include <use_ptr.h>
+#include <libcoro.h>
 namespace libcoro {
     class SwitchSchedulerAwaiter {
     public:

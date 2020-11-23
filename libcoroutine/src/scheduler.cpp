@@ -1,5 +1,4 @@
-#include "scheduler.h"
-#include <exception.h>
+#include <libcoro.h>
 
 #if LIBCORO_DEBUG
 std::mutex g_coro_cout_mutex;
