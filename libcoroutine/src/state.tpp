@@ -198,6 +198,18 @@ namespace libcoro {
         }
     }
 
+    template<typename Tp>
+    void State<Tp &>::SetValueInternal(RefrenceType val) {
+        switch (has_value_.load(std::memory_order_acquire)) {
+            case ResultType::Exception:
+                exception_.~exception_ptr();
+            default:
+                value_ = std::addressof(val);
+                has_value_.store(ResultType::Value, std::memory_order_release);
+                break;
+        }
+    }
+
     template <typename Tp>
     auto State<Tp&>::FutureAwaitResume() -> RefrenceType {
         scoped_lock<LockType> guard(mtx_);
@@ -213,6 +225,19 @@ namespace libcoro {
                 break;
         }
         return static_cast<RefrenceType>(*value_);
+    }
+
+    template<typename Tp>
+    void State<Tp&>::SetExceptionInternal(std::exception_ptr e) {
+        switch (has_value_.load(std::memory_order_acquire)) {
+            case ResultType::Exception:
+                exception_ = std::move(e);
+                break;
+            default:
+                new (&exception_) std::exception_ptr(std::move(e));
+                has_value_.store(ResultType::Exception, std::memory_order_release);
+                break;
+        }
     }
 
     template <typename Tp>
