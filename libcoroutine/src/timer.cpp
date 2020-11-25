@@ -1,4 +1,6 @@
 #include <libcoro.h>
+#include "timer.h"
+
 namespace libcoro {
 
     TimerManager::TimerManager() {
@@ -50,6 +52,45 @@ namespace libcoro {
                 running_timers_.erase(running_timers_.begin(), it);
             }
         }
+    }
+
+    void TimerManager::CallTarget_(const TimerManager::TimerTargetPtr &tt, bool cancel) {
+        auto cb = std::move(tt->cb_);
+        tt->st_ = TimerTarget::State::Invalid;
+#if _DEBUG
+        tt->manager = nullpter;
+#endif
+        if (cb) {
+            cb(cancel);
+        }
+    }
+
+    void TimerManager::Clear() {
+        std::unique_lock<spinlock> lock(added_mtx_);
+        auto add_timers = std::move(added_timers_);
+        lock.unlock();
+
+        for (auto& t : add_timers) {
+            CallTarget_(t, true);
+        }
+        auto r_timers = std::move(running_timers_);
+        for (auto& kv : r_timers) {
+            CallTarget_(kv.second, true);
+        }
+    }
+
+    TimerManager::TimerTargetPtr TimerManager::Add_(const TimerManager::TimerTargetPtr &tt) {
+        assert(tt);
+        assert(tt->st_ == TimerTarget::State::Invalid);
+
+        std::scoped_lock<spinlock> lock(added_mtx_);
+#if _DEBUG
+        asset(tt->manager_ == nullptr);
+        tt->manager = this;
+#endif
+        tt->st_ = TimerTarget::State::Added;
+        added_timers_.push_back(tt);
+        return tt;
     }
 
 }

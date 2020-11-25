@@ -1,0 +1,6 @@
+#ifndef LIBCOROUTINE_LIBCORO_MACRO_H
+#define LIBCOROUTINE_LIBCORO_MACRO_H
+
+#include "src/macro_define.h"
+
+#endif //LIBCOROUTINE_LIBCORO_MACRO_H

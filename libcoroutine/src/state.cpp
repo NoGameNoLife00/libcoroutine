@@ -105,7 +105,7 @@ namespace libcoro {
 
     void StateFuture::DestroyDeallocate() {
         size_t size = alloc_size_;
-#ifdef LIBCORO_DEBUG
+#if LIBCORO_DEBUG
         printf("DestroyDeallocate, size=%d\n", size);
 #endif
         this->~StateFuture();
@@ -138,6 +138,30 @@ namespace libcoro {
     void State<void>::SetValue() {
         scoped_lock<LockType> guard(mtx_);
         has_value_.store(ResultType::Value, std::memory_order_release);
+        Scheduler* sch = GetScheduler();
+        if (sch) {
+            if (HasHandlerSkipLock()) {
+                sch->AddGenerator(this);
+            } else {
+                sch->DelFinal(this);
+            }
+        }
+    }
+
+    void State<void>::FutureAwaitResume() {
+        scoped_lock<LockType> guard(mtx_);
+        if (exception_) {
+            std::rethrow_exception(std::move(exception_));
+        }
+        if (has_value_.load(std::memory_order_acquire) == ResultType::None) {
+            std::rethrow_exception(std::make_exception_ptr(FutureException{ErrorCode::NotReady}));
+        }
+    }
+
+    void State<void>::SetException(std::exception_ptr e) {
+        scoped_lock<LockType> guard(mtx_);
+        exception_ = std::move(e);
+
         Scheduler* sch = GetScheduler();
         if (sch) {
             if (HasHandlerSkipLock()) {

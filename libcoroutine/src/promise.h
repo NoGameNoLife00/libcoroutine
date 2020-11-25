@@ -38,7 +38,7 @@ namespace libcoro {
     public:
         using ValueType = Tp;
         using StateType = State<ValueType>;
-        using PromiseType = Promise<ValueType>;
+        using promise_type = Promise<ValueType>;
         using FutureType = Future<ValueType>;
 
         PromiseImpl() = default;
@@ -65,16 +65,71 @@ namespace libcoro {
         template<typename Uty>
         Uty&& await_transform(Uty&& whatever) {
             if constexpr (traits::HasStateV<Uty>) {
-                whatever.state_->SetScheduler(GetState().GetScheduler());
+                whatever.state_->SetScheduler(GetState()->GetScheduler());
             }
+            return std::forward<Uty>(whatever);
+        }
+        void unhandled_exception() {
+            this->RefState()->SetException(std::current_exception());
         }
 
+        void cancellation_request() noexcept {
+
+        }
+    };
+
+
+    template<typename Tp>
+    class Promise final : public PromiseImpl<Tp> {
+    public:
+        using typename PromiseImpl<Tp>::ValueType;
+        using PromiseImpl<Tp>::get_return_object;
+
+        template<typename U>
+        void return_value(U&& val) {
+            return this->RefState()->SetValue(std::forward<U>(val));
+        }
+
+        template<typename U>
+        suspend_always yield_value(U&& val) {
+            this->RefState()->PromiseYieldValue(this, std::forward<U>(val));
+            return {};
+        }
+    };
+
+    template<typename Tp>
+    class Promise<Tp&> final : public PromiseImpl<Tp&> {
+    public:
+        using typename PromiseImpl<Tp&>::ValueType;
+        using PromiseImpl<Tp&>::get_return_object;
+        void return_value(Tp& val) {
+            this->RefState()->SetValue(val);
+        }
+
+        suspend_always yield_value(Tp& val) {
+            this->RefState()->PromiseYieldValue(this, val);
+            return {};
+        }
+    };
+
+    template<>
+    class Promise<void> final : public PromiseImpl<void> {
+    public:
+        using PromiseImpl<void>::get_return_object;
+
+        void return_value() {
+            RefState()->SetValue();
+        }
+        suspend_always yield_value() {
+            RefState()->PromiseYieldValue(this);
+            return {};
+        }
     };
 
     template<typename Tp>
     auto PromiseImpl<Tp>::GetState() -> StateType* {
         size_t state_size = AlignSize<StateType>();
-        auto h = coroutine_handle<PromiseType>::from_promise(*reinterpret_cast<PromiseType*>(this));
+        auto h = coroutine_handle<promise_type>::from_promise(*reinterpret_cast<promise_type*>(this));
         char* ptr = reinterpret_cast<char*>(h.address()) - state_size;
         return reinterpret_cast<StateType*>(ptr);
     }

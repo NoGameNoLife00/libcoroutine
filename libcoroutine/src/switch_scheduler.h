@@ -6,7 +6,7 @@ namespace libcoro {
     public:
         using ValueType = void;
         using StateType = State<ValueType>;
-        using PromiseType = Promise<ValueType>;
+        using promise_type = Promise<ValueType>;
         using LockType = typename StateType::LockType;
 
         SwitchSchedulerAwaiter(Scheduler* sch) : scheduler_(sch) {}

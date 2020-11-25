@@ -5,10 +5,11 @@ namespace libcoro {
     template<typename Tp>
     class Future {
     public:
+        using promise_type = Promise<Tp>;
         using ValueType = Tp;
-        using PromiseType = Promise<ValueType>;
         using StateType = State<ValueType>;
-        using LockType = typename StateType::LcokType;
+        using FutureType = Future<ValueType>;
+        using LockType = typename StateType::LockType;
 
         Future(use_ptr<StateType> st) : state_(std::move(st)) {}
         Future(const Future&) = default;
@@ -17,7 +18,7 @@ namespace libcoro {
         Future& operator=(const Future&) = default;
         Future& operator=(Future&&) =default;
 
-        bool await_ready() const {
+        bool await_ready() const noexcept {
             return state_->FutureAwaitReady();
         }
 
@@ -26,12 +27,11 @@ namespace libcoro {
             state_->FutureAwaitSuspend(handler);
         }
 
-        ValueType await_resume() const {
+        Tp await_resume() const {
             return state_->FutureAwaitResume();
         }
-    private:
-        use_ptr<StateType> state_;
 
+        use_ptr<StateType> state_;
     };
 }
 

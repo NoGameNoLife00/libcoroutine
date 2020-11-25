@@ -97,6 +97,8 @@ namespace libcoro {
 
             if (unlikely(!timer_->Empty()))
                 continue;
+
+            break;
         }
     }
 

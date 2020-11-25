@@ -39,13 +39,14 @@ namespace libcoro {
 
     template<typename Tp>
     class Awaitable : public AwaitableImpl<Tp> {
+    public:
         using typename AwaitableImpl<Tp>::ValueType;
         using typename AwaitableImpl<Tp>::StateType;
         using AwaitableImpl<Tp>::AwaitableImpl;
 
         template<class U>
         void SetValue(U&& val) const {
-            use_ptr<StateType> up(std::move(val));
+            use_ptr<StateType> up(std::move(this->state_));
             up->SetValue(std::forward<U>(val));
         }
     };

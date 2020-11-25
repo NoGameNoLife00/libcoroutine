@@ -128,19 +128,19 @@ namespace libcoro {
         static inline Sty* AllocState(bool awaiter) {
             AllocChar al;
             size_t size = AlignSize<Sty>();
-#ifdef LIBCORO_DEBUG
+#if LIBCORO_DEBUG
             printf("StateFuture::AllocState, size=%d\n", size);
 #endif
             char* ptr = al.allocate(size);
             Sty* st = new(ptr) Sty(awaiter);
-            st->alloc_size = static_cast<uint32_t>(size);
+            st->alloc_size_ = static_cast<uint32_t>(size);
             return st;
         }
 
 
     protected:
         explicit StateFuture(bool await) {
-#ifdef LIBCORO_DEBUG
+#if LIBCORO_DEBUG
             id_ = ++g_coro_state_id;
 #endif
             is_future_ = !await;
@@ -214,7 +214,39 @@ namespace libcoro {
 
     };
 
+    template<typename Tp>
+    class State<Tp&> final : public StateFuture {
+    public:
+        friend StateFuture;
+        using StateFuture::LockType;
+        using ValueType = Tp;
+        using RefrenceType = Tp&;
+        ~State() {
+            if (has_value_.load(std::memory_order_acquire) == ResultType::Exception) {
+                exception_.~exception_ptr();
+            }
+        }
+        auto FutureAwaitResume() -> RefrenceType;
+        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
+        void PromiseYieldValue(PromiseT* promise, RefrenceType val);
 
+        void SetException(std::exception_ptr e);
+        void SetValue(RefrenceType val);
+
+        template<class Exp>
+        inline void ThrowException(Exp e) {
+            SetException(std::make_exception_ptr(std::move(e)));
+        }
+    private:
+        explicit State(bool awaiter) : StateFuture(awaiter) {}
+        void SetValueInternal(RefrenceType val);
+        void SetExceptionInternal(std::exception_ptr e);
+        union {
+            std::exception_ptr exception_;
+            ValueType* value_;
+        };
+
+    };
 
     template <>
     class State<void> final : public StateFuture {

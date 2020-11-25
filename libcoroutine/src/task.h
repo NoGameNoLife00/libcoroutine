@@ -41,6 +41,7 @@ namespace libcoro {
 
     template<class Tp>
     class TaskImpl<Tp, std::void_t<traits::IsFuture<std::remove_reference_t<Tp>>>> : public Task {
+    public:
         using FutureType = std::remove_reference_t<Tp>;
         using ValueType = typename FutureType::ValueType;
         using StateType = State<ValueType>;
@@ -58,8 +59,9 @@ namespace libcoro {
 
     template<class Tp>
     class TaskImpl<Generator<Tp>> : public Task {
-        using FutureType = Generator<Tp>;
+    public:
         using ValueType = Tp;
+        using FutureType = Generator<ValueType>;
         using StateType = StateGenerator;
 
         TaskImpl() = default;
@@ -74,7 +76,7 @@ namespace libcoro {
     };
 
     template<class Ctx>
-    class TaskCtxImpl : public TaskImpl<RemoveCvrefT<decltype(std::declval<Ctx>())>> {
+    class TaskCtxImpl : public TaskImpl<RemoveCvRefT<decltype(std::declval<Ctx>()())>> {
     public:
         using ContextType = Ctx;
         ContextType context_;

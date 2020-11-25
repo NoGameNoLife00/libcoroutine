@@ -31,5 +31,8 @@
 #include "src/timer.h"
 #include "src/scheduler.h"
 #include "src/yield.h"
+#include "src/awaitable.h"
+#include "src/generator.h"
+#include "src/switch_scheduler.h"
 
 #endif //LIBCOROUTINE_LIBCORO_H

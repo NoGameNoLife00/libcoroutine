@@ -1,7 +1,7 @@
 #ifndef LIBCOROUTINE_DEFINE_H
 #define LIBCOROUTINE_DEFINE_H
 
-#include <libcoro.h>
+//#include <libcoro.h>
 #if LIBCORO_DEBUG
 extern std::mutex g_coro_cout_mutex;
 extern std::atomic<intptr_t> g_coro_state_count;
@@ -10,9 +10,12 @@ extern std::atomic<intptr_t> g_coro_evtctx_count;
 extern std::atomic<intptr_t> g_coro_state_id;
 #endif
 
+
 namespace libcoro {
     class Scheduler;
-//    using std::coroutine_handle;
+
+    template<typename tp = void>
+    class Future;
 
     template<typename Type = void>
     class Promise;
@@ -26,6 +29,8 @@ namespace libcoro {
 
     template <typename Type = void>
     class Awaitable;
+
+
 
     template <typename PromiseT = void>
     using coroutine_handle = std::coroutine_handle<PromiseT>;
@@ -50,13 +55,14 @@ namespace libcoro {
         return std::is_empty_v<T> ? 0 :
                (sizeof(T) + align_req - 1) & ~(align_req - 1);
     }
+
     template<class T>
     struct RemoveCvref
     {
         typedef std::remove_cv_t<std::remove_reference_t<T>> type;
     };
     template<class T>
-    using RemoveCvrefT = typename RemoveCvref<T>::type;
+    using RemoveCvRefT = typename RemoveCvref<T>::type;
 }
 
 #endif //LIBCOROUTINE_DEFINE_H

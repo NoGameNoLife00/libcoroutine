@@ -5,6 +5,8 @@
 #define _offset_of(c, m) reinterpret_cast<size_t>(&static_cast<c *>(0)->m)
 #endif
 
+#define go (*::libcoro::ThisScheduler()) +
+#define GO  (*::libcoro::ThisScheduler()) + [=]() mutable->libcoro::Future<>
 
 #ifndef likely
 #define likely(x) __builtin_expect(!!(x), 1)
