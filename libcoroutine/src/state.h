@@ -44,7 +44,9 @@ namespace libcoro {
     protected:
         Scheduler* scheduler_ = nullptr;
         coroutine_handle<> coro_;
-        virtual ~StateBase() {}
+        virtual ~StateBase() {
+            printf("~state() %x\n", this);
+        }
     private:
         virtual void DestroyDeallocate();
         std::atomic<intptr_t> count_{0};
@@ -58,11 +60,11 @@ namespace libcoro {
         void SetInitialSuspend(coroutine_handle<> handler) {
             coro_ = handler;
         }
-
+#ifdef LIBCORO_INLINE_STATE
         static StateGenerator* Construct(void* ptr) {
             return new(ptr) StateGenerator();
         }
-
+#endif
         static StateGenerator* AllocState();
         bool SwitchSchedulerAwaitSuspend(Scheduler* sch);
     private:
@@ -118,18 +120,20 @@ namespace libcoro {
         template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
         void PromiseFinalSuspend(coroutine_handle<PromiseT> handler);
 
+#ifdef LIBCORO_INLINE_STATE
         template<class Sty>
         static Sty* Construct(void* ptr, size_t size) {
             Sty* st = new(ptr) Sty(false);
             st->alloc_size_ = static_cast<uint32_t>(size);
             return st;
         }
+#endif
         template<class Sty>
         static inline Sty* AllocState(bool awaiter) {
             AllocChar al;
             size_t size = AlignSize<Sty>();
-#if LIBCORO_DEBUG
-            printf("StateFuture::AllocState, size=%d\n", size);
+#ifdef LIBCORO_DEBUG_PTR
+            printf("StateFuture AllocState, size=%d\n", size);
 #endif
             char* ptr = al.allocate(size);
             Sty* st = new(ptr) Sty(awaiter);
@@ -140,7 +144,7 @@ namespace libcoro {
 
     protected:
         explicit StateFuture(bool await) {
-#if LIBCORO_DEBUG
+#ifdef LIBCORO_DEBUG_PTR
             id_ = ++g_coro_state_id;
 #endif
             is_future_ = !await;
@@ -149,7 +153,7 @@ namespace libcoro {
         mutable LockType mtx_;
         coroutine_handle<> init_co_;
         StateFuture* parent_ = nullptr;
-#ifdef LIBCORO
+#ifdef LIBCORO_DEBUG_PTR
         intptr_t id_;
 #endif
         uint32_t alloc_size_ = 0;
@@ -268,6 +272,7 @@ namespace libcoro {
         }
 
     private:
+        explicit State(bool awaiter) : StateFuture(awaiter) {}
         std::exception_ptr exception_;
     };
 

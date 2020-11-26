@@ -76,6 +76,11 @@ namespace libcoro {
         void cancellation_request() noexcept {
 
         }
+
+    private:
+#ifndef LIBCORO_INLINE_STATE
+        use_ptr<StateType> state_ = StateFuture::AllocState<StateType>(false);
+#endif
     };
 
 
@@ -128,10 +133,14 @@ namespace libcoro {
 
     template<typename Tp>
     auto PromiseImpl<Tp>::GetState() -> StateType* {
+#ifdef LIBCORO_INLINE_STATE
         size_t state_size = AlignSize<StateType>();
         auto h = coroutine_handle<promise_type>::from_promise(*reinterpret_cast<promise_type*>(this));
         char* ptr = reinterpret_cast<char*>(h.address()) - state_size;
         return reinterpret_cast<StateType*>(ptr);
+#else
+        return state_.get();
+#endif
     }
 
     template<typename Tp>

@@ -1,6 +1,5 @@
 #include <libcoro.h>
 #include <thread>
-
 using namespace libcoro;
 
 template <class Tp>
@@ -73,7 +72,7 @@ void ResumeAbleMainCb() {
     std::string ref_string{"2"};
     go ResumeAbleGetString(ref_string);
     ThisScheduler()->RunUtilNoTask();
-    go [=]()mutable->libcoro::Future<> {
+    GO {
         auto val = co_await ResumeAbleGetLong(2);
         printf("GO:%ld\n", val);
     };
@@ -82,6 +81,7 @@ void ResumeAbleMainCb() {
 }
 int main()
 {
+    setbuf(stdout, nullptr); // debug
     ResumeAbleMainCb();
     return 0;
 }

@@ -1,6 +1,6 @@
 #include <libcoro.h>
 
-#if LIBCORO_DEBUG
+#ifdef LIBCORO_DEBUG_PTR
 std::mutex g_coro_cout_mutex;
 std::atomic<intptr_t> g_coro_state_count = 0;
 std::atomic<intptr_t> g_coro_task_count = 0;
@@ -17,11 +17,11 @@ namespace libcoro {
 
 
     const char * future_error_string[static_cast<size_t>(ErrorCode::MaxCount)] {
-      "none",
-      "not_ready",
-      "timer_canceled",
-      "not_await_lock",
-      "stop_requested",
+        "none",
+        "not_ready",
+        "timer_canceled",
+        "not_await_lock",
+        "stop_requested",
     };
 
     char sz_future_error_buffer[256];

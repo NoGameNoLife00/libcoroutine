@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -fcoroutines -pthread")
 
+
+set(LIBCORO_DEBUG 1)
+
+add_definitions(-DLIBCORO_DEBUG_PTR
+        -D_DEBUG)
+
 message(STATUS "C++ flags: ${CMAKE_CXX_FLAGS}")
 
 include_directories(libcoroutine)

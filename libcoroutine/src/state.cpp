@@ -9,12 +9,13 @@ namespace libcoro {
         delete this;
     }
 
-        void StateGenerator::DestroyDeallocate() {
+    void StateGenerator::DestroyDeallocate() {
         size_t size = AlignSize<StateGenerator>();
+#ifdef LIBCORO_INLINE_STATE
         char* ptr = reinterpret_cast<char*>(this) + size;
         size = *reinterpret_cast<uint32_t*>(ptr);
-
-#if LIBCORO_DEBUG
+#endif
+#ifdef LIBCORO_DEBUG_PTR
         printf("DestroyDeallocate, size=%d\n", size);
 #endif
         this->~StateGenerator();
@@ -39,8 +40,8 @@ namespace libcoro {
     StateGenerator *StateGenerator::AllocState() {
         AllocChar al;
         size_t size = AlignSize<StateGenerator>();
-#if LIBCORO_DEBUG
-        printf("StateGenerator::AllocState, size=%d\n", sizeof(StateGenerator));
+#ifdef LIBCORO_DEBUG_PTR
+        printf("StateGenerator AllocState, size=%lu\n", sizeof(StateGenerator));
 #endif
         char* ptr = al.allocate(size);
         return new(ptr) StateGenerator();
@@ -107,8 +108,8 @@ namespace libcoro {
 
     void StateFuture::DestroyDeallocate() {
         size_t size = alloc_size_;
-#if LIBCORO_DEBUG
-        printf("DestroyDeallocate, size=%d\n", size);
+#ifdef LIBCORO_DEBUG_PTR
+        printf("DestroyDeallocate, size=%zu\n", size);
 #endif
         this->~StateFuture();
         AllocChar al;

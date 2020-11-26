@@ -2,7 +2,7 @@
 #define LIBCOROUTINE_DEFINE_H
 
 //#include <libcoro.h>
-#if LIBCORO_DEBUG
+#ifdef LIBCORO_DEBUG_PTR
 extern std::mutex g_coro_cout_mutex;
 extern std::atomic<intptr_t> g_coro_state_count;
 extern std::atomic<intptr_t> g_coro_task_count;

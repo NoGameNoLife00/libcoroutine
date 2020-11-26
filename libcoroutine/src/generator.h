@@ -122,10 +122,14 @@ namespace libcoro {
             }
 
             StateType* GetState() noexcept {
+#ifdef LIBCORO_INLINE_STATE
                 size_t state_size = AlignSize<StateType>();
                 auto h = coroutine_handle<promise_type>::from_promise(*this);
                 char* ptr = reinterpret_cast<char*>(h.address()) - state_size;
                 return reinterpret_cast<StateType*>(ptr);
+#else
+                return state_.get();
+#endif
             }
 
             StateType* RefState() {
@@ -139,29 +143,44 @@ namespace libcoro {
                     "generator_t only supports stateless allocators");
             void* operator new(size_t size) {
                 AllocChar al;
+#ifdef LIBCORO_INLINE_STATE
                 size_t state_size = AlignSize<StateType>();
                 assert(size > sizeof(uint32_t) && size < (std::numeric_limits<uint32_t>::max)() - sizeof(state_size));
 
                 char* ptr = al.allocate(size + state_size);
                 char* r_ptr = ptr + state_size;
-#if LIBCORO_DEBUG
-                printf("generator_promise::new, alloc size=%d\n", size + state_size);
-                printf("generator_promise::new, alloc ptr=%x\n", (void*)ptr);
-                printf("generator_promise::new, alloc return_ptr=%x\n", (void*)r_ptr);
+#ifdef LIBCORO_DEBUG_PTR
+                printf("generator new, alloc size=%d\n", size + state_size);
+                printf("generator new, alloc ptr=%x\n", (void*)ptr);
+                printf("generator new, alloc return_ptr=%x\n", (void*)r_ptr);
 #endif
                 {
                     StateType* st = StateType::Construct(ptr);
                     st->lock();
                 }
                 return r_ptr;
+#else
+                char* ptr = al.allocate(size);
+#ifdef LIBCORO_DEBUG_PTR
+                printf("generator new, alloc size=%d\n", size);
+                printf("generator new, alloc ptr=%x\n", (void*)ptr);
+                printf("generator new, alloc return_ptr=%x\n", (void*)ptr);
+#endif
+                return ptr;
+#endif
             }
 
             void operator delete(void* ptr, size_t size) {
+#ifdef LIBCORO_INLINE_STATE
                 size_t state_size = AlignSize<StateType>();
                 assert(size >= sizeof(uint32_t) && size < (std::numeric_limits<uint32_t>::max)() - sizeof(state_size));
                 *reinterpret_cast<uint32_t*>(ptr) = static_cast<uint32_t>(size+state_size);
                 StateType* st = reinterpret_cast<StateType*>(static_cast<char*>(ptr) - state_size);
                 st->unlock();
+#else
+                AllocChar al;
+                return al.deallocate(reinterpret_cast<char*>(ptr), size);
+#endif
             }
         };
 
@@ -213,6 +232,9 @@ namespace libcoro {
         }
     private:
         coroutine_handle<promise_type> coro_ = nullptr;
+#ifndef LIBCORO_INLINE_STATE
+        use_ptr<StateType> state_ = StateGenerator::AllocState();
+#endif
     };
 }
 

@@ -12,9 +12,9 @@ namespace libcoro {
         static const int LOCKED_VALUE = 1;
 
         std::atomic_int lck;
-//#ifdef LIBCORO_DEBUG
+#ifdef _DEBUG
         std::thread::id owner_thread_id;
-//#endif
+#endif
 
         spinlock() {
             lck = FREE_VALUE;
@@ -23,9 +23,9 @@ namespace libcoro {
         void lock() {
             int val = FREE_VALUE;
             if (!lck.compare_exchange_weak(val, LOCKED_VALUE, std::memory_order_acq_rel)) {
-//#ifdef LIBCORO_DEBUG
+#ifdef _DEBUG
                 assert(owner_thread_id != std::this_thread::get_id());
-//#endif
+#endif
                 size_t spin_count = 0;
                 auto dt = std::chrono::milliseconds{1};
                 do {
@@ -43,7 +43,7 @@ namespace libcoro {
                     val = FREE_VALUE;
                 } while (!lck.compare_exchange_weak(val, LOCKED_VALUE, std::memory_order_acq_rel));
             }
-#ifdef LIBCORO_DEBUG
+#ifdef _DEBUG
             owner_thread_id = std::this_thread::get_id();
 #endif
         }
@@ -51,7 +51,7 @@ namespace libcoro {
         bool try_lock() {
             int val = FREE_VALUE;
             bool ret = lck.compare_exchange_strong(val, LOCKED_VALUE, std::memory_order_acq_rel);
-#ifdef LIBCORO_DEBUG
+#ifdef _DEBUG
             if (ret) {
                 owner_thread_id = std::this_thread::get_id();
             }
@@ -60,7 +60,7 @@ namespace libcoro {
         }
 
         void unlock() {
-#if LIBCORO_DEBUG
+#ifdef _DEBUG
             owner_thread_id = std::thread::id();
 #endif
             lck.store(FREE_VALUE, std::memory_order_release);

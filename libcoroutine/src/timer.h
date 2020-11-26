@@ -28,7 +28,7 @@ namespace libcoro {
             TimerClockType::time_point tp_;
             TimerCallbackType cb_;
             State st_ = State::Invalid;
-#if _DEBUG
+#ifdef _DEBUG
             TimerManager* manager_ = nullptr;
 #endif
         };

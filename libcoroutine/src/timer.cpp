@@ -15,7 +15,7 @@ namespace libcoro {
         if (!tt || tt->st_ == TimerTarget::State::Invalid) {
             return false;
         }
-#if _DEBUG
+#ifdef _DEBUG
         assert(tt->manager_ == this);
 #endif
         tt->st_ = TimerTarget::State::Invalid;
@@ -57,8 +57,8 @@ namespace libcoro {
     void TimerManager::CallTarget_(const TimerManager::TimerTargetPtr &tt, bool cancel) {
         auto cb = std::move(tt->cb_);
         tt->st_ = TimerTarget::State::Invalid;
-#if _DEBUG
-        tt->manager = nullpter;
+#ifdef _DEBUG
+        tt->manager_ = nullptr;
 #endif
         if (cb) {
             cb(cancel);
@@ -84,9 +84,9 @@ namespace libcoro {
         assert(tt->st_ == TimerTarget::State::Invalid);
 
         std::scoped_lock<spinlock> lock(added_mtx_);
-#if _DEBUG
-        asset(tt->manager_ == nullptr);
-        tt->manager = this;
+#ifdef _DEBUG
+        assert(tt->manager_ == nullptr);
+        tt->manager_ = this;
 #endif
         tt->st_ = TimerTarget::State::Added;
         added_timers_.push_back(tt);
