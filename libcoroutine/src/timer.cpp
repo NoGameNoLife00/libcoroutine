@@ -79,7 +79,7 @@ namespace libcoro {
         }
     }
 
-    TimerManager::TimerTargetPtr TimerManager::Add_(const TimerManager::TimerTargetPtr &tt) {
+    TimerManager::TimerTargetPtr TimerManager::AddInternal_(const TimerManager::TimerTargetPtr &tt) {
         assert(tt);
         assert(tt->st_ == TimerTarget::State::Invalid);
 

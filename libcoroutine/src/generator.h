@@ -72,6 +72,7 @@ namespace libcoro {
             using FutureType = Generator<ValueType>;
 
             Tp const* current_value;
+
             promise_type() {
                 GetState()->SetInitialSuspend(coroutine_handle<promise_type>::from_promise(*this));
             }
@@ -95,6 +96,11 @@ namespace libcoro {
             }
 
             suspend_always final_suspend() noexcept {
+                return {};
+            }
+
+            suspend_always yield_value(Tp const& val) noexcept {
+                current_value = std::addressof(val);
                 return {};
             }
 
@@ -150,9 +156,9 @@ namespace libcoro {
                 char* ptr = al.allocate(size + state_size);
                 char* r_ptr = ptr + state_size;
 #ifdef LIBCORO_DEBUG_PTR
-                printf("generator new, alloc size=%d\n", size + state_size);
-                printf("generator new, alloc ptr=%x\n", (void*)ptr);
-                printf("generator new, alloc return_ptr=%x\n", (void*)r_ptr);
+                printf("Generator new, alloc size=%d\n", size + state_size);
+                printf("Generator new, alloc ptr=%x\n", (void*)ptr);
+                printf("Generator new, alloc return_ptr=%x\n", (void*)r_ptr);
 #endif
                 {
                     StateType* st = StateType::Construct(ptr);
@@ -162,9 +168,9 @@ namespace libcoro {
 #else
                 char* ptr = al.allocate(size);
 #ifdef LIBCORO_DEBUG_PTR
-                printf("generator new, alloc size=%d\n", size);
-                printf("generator new, alloc ptr=%x\n", (void*)ptr);
-                printf("generator new, alloc return_ptr=%x\n", (void*)ptr);
+                printf("Generator new, alloc size=%d\n", size);
+                printf("Generator new, alloc ptr=%x\n", (void*)ptr);
+                printf("Generator new, alloc return_ptr=%x\n", (void*)ptr);
 #endif
                 return ptr;
 #endif
@@ -182,6 +188,10 @@ namespace libcoro {
                 return al.deallocate(reinterpret_cast<char*>(ptr), size);
 #endif
             }
+
+#ifndef LIBCORO_INLINE_STATE
+            use_ptr<StateType> state_ = StateGenerator::AllocState();
+#endif
         };
 
         using  iterator = GeneratorIterator<Tp, promise_type>;
@@ -232,9 +242,6 @@ namespace libcoro {
         }
     private:
         coroutine_handle<promise_type> coro_ = nullptr;
-#ifndef LIBCORO_INLINE_STATE
-        use_ptr<StateType> state_ = StateGenerator::AllocState();
-#endif
     };
 }
 

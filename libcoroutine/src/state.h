@@ -45,7 +45,7 @@ namespace libcoro {
         Scheduler* scheduler_ = nullptr;
         coroutine_handle<> coro_;
         virtual ~StateBase() {
-            printf("~state() %x\n", this);
+//            printf("~state() %x\n", this);
         }
     private:
         virtual void DestroyDeallocate();

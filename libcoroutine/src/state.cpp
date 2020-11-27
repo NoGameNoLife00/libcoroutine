@@ -91,8 +91,7 @@ namespace libcoro {
             coroutine_handle<> handler = init_co_;
             is_init_co_ = InitType::None;
             guard.unlock();
-
-            handler.resume();
+            handler.destroy();
             return;
         }
     }

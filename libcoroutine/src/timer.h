@@ -42,10 +42,10 @@ namespace libcoro {
         TimerHandler() = default;
         TimerHandler(const TimerHandler&) = default;
         TimerHandler& operator=(const TimerHandler&) = default;
-        inline TimerHandler(TimerHandler && r)
+        inline TimerHandler(TimerHandler && r) noexcept
         : manager_(std::move(r.manager_)), target_(std::move(r.target_))  {}
 
-        inline TimerHandler& operator=(TimerHandler&& r) {
+        inline TimerHandler& operator=(TimerHandler&& r) noexcept {
             if (this != &r) {
                 manager_ = std::move(r.manager_);
                 target_ = std::move(r.target_);
@@ -76,23 +76,33 @@ namespace libcoro {
         ~TimerManager();
 
         template<class Rep, class Period, class Cb>
-        TimerTargetPtr Add(const std::chrono::duration<Rep, Period>& dt, Cb cb) {
+        TimerTargetPtr Add(const std::chrono::duration<Rep, Period>& dt, Cb&& cb) {
             return Add_(std::chrono::duration_cast<DurationType>(dt), std::forward<Cb>(cb));
         }
 
         template<class Clock, class Duration = typename Clock::duration, class Cb>
-        TimerTargetPtr Add(const std::chrono::time_point<Clock, Duration>& tp, Cb cb) {
+        TimerTargetPtr Add(const std::chrono::time_point<Clock, Duration>& tp, Cb&& cb) {
             return Add_(std::chrono::time_point_cast<DurationType>(tp), std::forward<Cb>(cb));
         }
 
         template<class Rep, class Period, class Cb>
-        TimerHandler AddHandler(const std::chrono::duration<Rep, Period>& dt, Cb& cb) {
+        TimerHandler AddHandler(const std::chrono::duration<Rep, Period>& dt, Cb&& cb) {
             return {this, Add(dt, std::forward<Cb>(cb))};
         }
 
         template<class Clock, class Duration = typename Clock::duration, class Cb>
         TimerHandler AddHandler(const std::chrono::time_point<Clock, Duration>& tp, Cb&& cb) {
             return {this, Add(tp, std::forward<Cb>(cb))};
+        }
+
+        template<class Cb>
+        TimerTargetPtr Add_(const DurationType& dt, Cb&& cb) {
+            return AddInternal_(std::make_shared<TimerTarget>(ClockType::now() + dt, std::forward<Cb>(cb)));
+        }
+
+        template<class Cb>
+        TimerTargetPtr Add_(const TimePointType& tp, Cb&& cb) {
+            return AddInternal_(std::make_shared<TimerTarget>(tp, std::forward<Cb>(cb)));
         }
 
         bool Stop(const TimerTargetPtr& tt);
@@ -109,16 +119,7 @@ namespace libcoro {
         TimerArrayType  added_timers_;
         TimerMapType running_timers_;
 
-        template<class Cb>
-        TimerTargetPtr Add_(const DurationType& dt, Cb&& cb) {
-            return Add_(std::make_shared<TimerTarget>(ClockType::now() + dt, std::forward<Cb>(cb)));
-        }
-
-        template<class Cb>
-        TimerTarget Add_(const TimePointType& tp, Cb&& cb) {
-            return Add_(std::make_shared<TimerTarget>(tp, std::forward<Cb>(cb)));
-        }
-        TimerTargetPtr Add_(const TimerTargetPtr& tt);
+        TimerTargetPtr AddInternal_(const TimerTargetPtr& tt);
         static void CallTarget_(const TimerTargetPtr& tt, bool cancel);
     };
 

@@ -17,6 +17,7 @@
 #include <map>
 #include <utility>
 
+
 #include "src/exception.h"
 #include "src/define.h"
 #include "src/macro_define.h"
@@ -24,15 +25,18 @@
 #include "src/co_type_traits.h"
 #include "src/spinlock.h"
 #include "src/state.h"
-#include "src/state.tpp"
 #include "src/future.h"
 #include "src/promise.h"
+#include "src/awaitable.h"
+#include "src/generator.h"
 #include "src/task.h"
 #include "src/timer.h"
 #include "src/scheduler.h"
+#include "src/state.tpp"
+
 #include "src/yield.h"
-#include "src/awaitable.h"
-#include "src/generator.h"
+
 #include "src/switch_scheduler.h"
+#include "src/current_scheduler.h"
 
 #endif //LIBCOROUTINE_LIBCORO_H

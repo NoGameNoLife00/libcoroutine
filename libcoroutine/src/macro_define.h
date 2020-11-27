@@ -8,6 +8,10 @@
 #define go (*::libcoro::ThisScheduler()) +
 #define GO  (*::libcoro::ThisScheduler()) + [=]() mutable->libcoro::Future<>
 
+#define CurrentScheduler() (co_await ::libcoro::GetCurrentScheduler())
+#define RootState() (co_await ::libcoro::GetRootState())
+#define CurrentTask() (co_await ::libcoro::GetCurrentTask())
+
 #ifndef likely
 #define likely(x) __builtin_expect(!!(x), 1)
 #endif // likely
