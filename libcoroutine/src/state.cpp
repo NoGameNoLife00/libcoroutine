@@ -163,7 +163,6 @@ namespace libcoro {
     void State<void>::SetException(std::exception_ptr e) {
         scoped_lock<LockType> guard(mtx_);
         exception_ = std::move(e);
-
         Scheduler* sch = GetScheduler();
         if (sch) {
             if (HasHandlerSkipLock()) {

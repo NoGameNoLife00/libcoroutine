@@ -53,7 +53,7 @@ namespace libcoro {
         GeneratorIterator(coroutine_handle<PromiseType> coro) : GeneratorIterator<void, PromiseType>(coro) {}
 
         Refrence operator*() const {
-            return *this->coro.promise().current_value;
+            return *this->coro_.promise().current_value;
         }
         Pointer operator->() const {
             return this->coro_.promise().current_value;

@@ -38,5 +38,6 @@
 
 #include "src/switch_scheduler.h"
 #include "src/current_scheduler.h"
+#include "src/sleep.h"
 
 #endif //LIBCOROUTINE_LIBCORO_H

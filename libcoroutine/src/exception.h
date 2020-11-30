@@ -22,6 +22,14 @@ namespace libcoro {
         : std::logic_error(GetErrorString(e, "FutureException")), err_(e) {
         }
     };
+
+class CancellationException : public std::logic_error {
+public:
+    ErrorCode err_;
+    CancellationException(ErrorCode e) :
+    std::logic_error(GetErrorString(e, "CancellationException")) {
+    }
+};
 }
 
 #endif //LIBCOROUTINE_EXCEPTION_H

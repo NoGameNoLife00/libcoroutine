@@ -20,7 +20,8 @@ include_directories(libcoroutine)
 #file(GLOB_RECURSE SRC LIST_DIRECTORIES true libcoroutine/src/*.h libcoroutine/src/*.cpp)
 set(SRC libcoroutine/src/state.cpp
         libcoroutine/src/scheduler.cpp
-        libcoroutine/src/timer.cpp)
+        libcoroutine/src/timer.cpp
+        libcoroutine/src/sleep.cpp)
 
 add_library(libcoroutine STATIC ${SRC})
 

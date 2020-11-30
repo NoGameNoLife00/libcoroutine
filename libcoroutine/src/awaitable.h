@@ -24,7 +24,7 @@ namespace libcoro {
         }
 
         template<typename Exp>
-        inline void ThrowException(Exp e) {
+        inline void ThrowException(Exp e) const {
             SetException(std::make_exception_ptr(std::move(e)));
         }
 

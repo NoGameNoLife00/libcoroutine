@@ -70,6 +70,12 @@ namespace libcoro {
             return std::forward<Uty>(whatever);
         }
         void unhandled_exception() {
+//            try {
+//                std::rethrow_exception(std::current_exception());
+//            } catch(const std::exception& e) {
+//                printf("%s", e.what());
+//            }
+
             this->RefState()->SetException(std::current_exception());
         }
 
@@ -121,6 +127,11 @@ namespace libcoro {
     class Promise<void> final : public PromiseImpl<void> {
     public:
         using PromiseImpl<void>::get_return_object;
+
+
+        void return_void() { // co_return;
+            RefState()->SetValue();
+        }
 
         void return_value() {
             RefState()->SetValue();
