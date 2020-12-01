@@ -89,7 +89,7 @@ namespace libcoro {
         void DestroyDeallocate() override;
         void Resume() override;
         bool HasHandler() const override;
-        StateBase *GetParent() const override;
+        StateBase* GetParent() const override;
         inline bool IsReady() const {
             if (_offset_of(StateFuture, is_future_) - _offset_of(StateFuture, has_value_) == 1) {
                 return 0 != reinterpret_cast<const std::atomic<uint16_t> &>(has_value_).load(std::memory_order_acquire);

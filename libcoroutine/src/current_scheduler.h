@@ -58,13 +58,13 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, std::enable_if_t<traits::IsPromiseV<PromiseT>>>
+        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
         bool await_suspend(coroutine_handle<PromiseT> handler) {
             PromiseT& promise = handler.promise();
             auto* parent = promise.GetState();
             StateBase* state = parent->GetRoot();
             Scheduler* sch = state->GetScheduler();
-            this->task_ = sch->FindTask(state);
+            task_ = sch->FindTask(state);
             return false;
         }
 

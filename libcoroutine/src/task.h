@@ -12,6 +12,10 @@ namespace libcoro {
         virtual ~Task() {}
 
         const stop_source& GetStopSource() {
+//            if (!stop_.stop_possible()) {
+//                stop_source tmp;
+//                stop_.swap(tmp);
+//            }
             return stop_;
         }
 

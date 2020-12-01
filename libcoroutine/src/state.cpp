@@ -102,7 +102,7 @@ namespace libcoro {
     }
 
     StateBase *StateFuture::GetParent() const {
-        return StateBase::GetParent();
+        return parent_;
     }
 
     void StateFuture::DestroyDeallocate() {
