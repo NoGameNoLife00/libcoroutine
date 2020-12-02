@@ -109,16 +109,16 @@ namespace libcoro {
             return has_value_.load(std::memory_order_acquire) != ResultType::None;
         }
 
-        template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void FutureAwaitSuspend(coroutine_handle<PromiseT> handler);
+        template<PromiseT PromiseTp>
+        void FutureAwaitSuspend(coroutine_handle<PromiseTp> handler);
 
         bool SwitchSchedulerAwaitSuspend(Scheduler* sch);
 
-        template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void PromiseInitialSuspend(coroutine_handle<PromiseT> handler);
+        template<PromiseT PromiseTp>
+        void PromiseInitialSuspend(coroutine_handle<PromiseTp> handler);
 
-        template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void PromiseFinalSuspend(coroutine_handle<PromiseT> handler);
+        template<PromiseT PromiseTp>
+        void PromiseFinalSuspend(coroutine_handle<PromiseTp> handler);
 
 #ifdef LIBCORO_INLINE_STATE
         template<class Sty>
@@ -190,8 +190,8 @@ namespace libcoro {
 
         auto FutureAwaitResume() -> ValueType;
 
-        template<class PromiseT, class U, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void PromiseYieldValue(PromiseT* promise, U&& val);
+        template<PromiseT PromiseTp, class U>
+        void PromiseYieldValue(PromiseTp* promise, U&& val);
 
         void SetException(std::exception_ptr e);
 
@@ -231,8 +231,8 @@ namespace libcoro {
             }
         }
         auto FutureAwaitResume() -> RefrenceType;
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        void PromiseYieldValue(PromiseT* promise, RefrenceType val);
+        template<PromiseT PromiseTp>
+        void PromiseYieldValue(PromiseTp* promise, RefrenceType val);
 
         void SetException(std::exception_ptr e);
         void SetValue(RefrenceType val);
@@ -260,8 +260,8 @@ namespace libcoro {
 
         void FutureAwaitResume();
 
-        template<class PromiseT, typename = std::enable_if<traits::IsPromiseV<PromiseT>>>
-        void PromiseYieldValue(PromiseT* promise);
+        template<PromiseT PromiseTp>
+        void PromiseYieldValue(PromiseTp* promise);
         void SetException(std::exception_ptr e);
 
         void SetValue();

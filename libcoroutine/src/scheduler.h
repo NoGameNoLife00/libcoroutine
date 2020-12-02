@@ -15,9 +15,9 @@ namespace libcoro {
         void RunUtilNoTask();
 
         template<typename T>
-        requires(traits::IsCallableV<T> || traits::IsFutureV<T> || traits::IsGeneratorV<T>)
+        requires(CallableT<T> || FutureT<T> || GeneratorT<T>)
         Task* operator+(T&& coro) {
-            if constexpr (traits::IsCallableV<T>)
+            if constexpr (CallableT<T>)
                 return NewTask(new TaskCtxImpl<T>(coro));
             else
                 return NewTask(new TaskImpl<T>(coro));

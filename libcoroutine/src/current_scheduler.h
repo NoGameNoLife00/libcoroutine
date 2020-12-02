@@ -7,9 +7,9 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        bool await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.promise();
+        template<PromiseT PromiseTp>
+        bool await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.promise();
             auto* state = promise.GetState();
             this->scheduler_ = state->GetScheduler();
             return false;
@@ -33,9 +33,9 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        bool await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.promise();
+        template<PromiseT PromiseTp>
+        bool await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.promise();
             auto* parent = promise.GetState();
             this->state_ = parent->GetRoot();
             return false;
@@ -58,9 +58,9 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        bool await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.promise();
+        template<PromiseT PromiseTp>
+        bool await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.promise();
             auto* parent = promise.GetState();
             StateBase* state = parent->GetRoot();
             Scheduler* sch = state->GetScheduler();

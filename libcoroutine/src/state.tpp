@@ -4,8 +4,8 @@
 
 
 namespace libcoro {
-    template<class PromiseT, typename Enable>
-    void StateFuture::PromiseInitialSuspend(coroutine_handle<PromiseT> handler) {
+    template<PromiseT PromiseTp>
+    void StateFuture::PromiseInitialSuspend(coroutine_handle<PromiseTp> handler) {
         assert(scheduler_ == nullptr);
         assert(!coro_);
 
@@ -13,8 +13,8 @@ namespace libcoro {
         is_init_co_ = InitType::Initial;
     }
 
-    template<class PromiseT, typename Enable>
-    void StateFuture::PromiseFinalSuspend(coroutine_handle<PromiseT> handler) {
+    template<PromiseT PromiseTp>
+    void StateFuture::PromiseFinalSuspend(coroutine_handle<PromiseTp> handler) {
         scoped_lock<LockType> guard(mtx_);
         init_co_ = handler;
         is_init_co_ = InitType::Final;
@@ -29,9 +29,9 @@ namespace libcoro {
     }
 
 
-    template<class PromiseT, typename Enable>
-    void StateFuture::FutureAwaitSuspend(coroutine_handle<PromiseT> handler) {
-        PromiseT& promise = handler.promise();
+    template<PromiseT PromiseTp>
+    void StateFuture::FutureAwaitSuspend(coroutine_handle<PromiseTp> handler) {
+        PromiseTp& promise = handler.promise();
         auto* parent_state = promise.GetState();
         Scheduler* sch = parent_state->GetScheduler();
         scoped_lock<LockType> guard(mtx_);
@@ -48,9 +48,9 @@ namespace libcoro {
     }
 
     template<typename Tp>
-    template<class PromiseT, class U, typename Enable>
-    void State<Tp>::PromiseYieldValue(PromiseT *promise, U &&val) {
-        coroutine_handle<PromiseT> handler = coroutine_handle<PromiseT>::from_promise(*promise);
+    template<PromiseT PromiseTp, class U>
+    void State<Tp>::PromiseYieldValue(PromiseTp *promise, U &&val) {
+        coroutine_handle<PromiseTp> handler = coroutine_handle<PromiseTp>::from_promise(*promise);
 
         scoped_lock<LockType> guard(mtx_);
         if (!handler.done()) {
@@ -116,9 +116,9 @@ namespace libcoro {
         }
     }
 
-    template<class PromiseT, typename Enable >
-    void State<void>::PromiseYieldValue(PromiseT* promise) {
-        coroutine_handle<PromiseT> handler = coroutine_handle<PromiseT>::from_promise(*promise);
+    template<PromiseT PromiseTp>
+    void State<void>::PromiseYieldValue(PromiseTp* promise) {
+        coroutine_handle<PromiseTp> handler = coroutine_handle<PromiseTp>::from_promise(*promise);
         scoped_lock<LockType> guard(mtx_);
         if (!handler.done()) {
             if (!coro_) {
@@ -167,9 +167,9 @@ namespace libcoro {
     }
 
     template<typename Tp>
-    template<class PromiseT, typename>
-    void State<Tp &>::PromiseYieldValue(PromiseT *promise, RefrenceType val) {
-        coroutine_handle<PromiseT> handler = coroutine_handle<PromiseT>::from_promise(*promise);
+    template<PromiseT PromiseTp>
+    void State<Tp &>::PromiseYieldValue(PromiseTp *promise, RefrenceType val) {
+        coroutine_handle<PromiseTp> handler = coroutine_handle<PromiseTp>::from_promise(*promise);
         scoped_lock<LockType> guard(mtx_);
         if (!handler.done()) {
             if (!coro_) {

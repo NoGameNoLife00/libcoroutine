@@ -9,9 +9,9 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        inline void await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.promise();
+        template<PromiseT PromiseTp>
+        inline void await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.promise();
             auto* state = promise.GetState();
             state->PromiseInitialSuspend(handler);
         }
@@ -23,9 +23,9 @@ namespace libcoro {
         inline bool await_ready() {
             return false;
         }
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        inline void await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.promise();
+        template<PromiseT PromiseTp>
+        inline void await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.promise();
             auto* state = promise.RefState();
             state->PromiseFinalSuspend(handler);
         }

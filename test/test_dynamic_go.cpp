@@ -7,7 +7,7 @@ std::array<std::array<std::array<int32_t, M>, M>, 3> dynamic_cells;
 void test_dynamic_go() {
     auto co_star = [](int j) -> libcoro::Future<int> {
         for (int i = 0; i < M; i++) {
-            go[=]() -> libcoro::Generator<int> {
+            go [=]() -> libcoro::Generator<int> {
                 for (int k = 0; k < M; k++) {
                     ++dynamic_cells[j][i][k];
                     ++dynamic_go_count;

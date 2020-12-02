@@ -20,9 +20,9 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        bool await_suspend(coroutine_handle<PromiseT> handler) {
-            PromiseT& promise = handler.Promise();
+        template<PromiseT PromiseTp>
+        bool await_suspend(coroutine_handle<PromiseTp> handler) {
+            PromiseTp& promise = handler.Promise();
             auto* ptr = promise.GetState();
             if (ptr->SwitchSchedulerAwaitSuspend(scheduler_)) {
                 use_ptr<State<void>> state = StateFuture::AllocState<StateType>(true);

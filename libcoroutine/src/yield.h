@@ -13,8 +13,8 @@ namespace libcoro {
             return false;
         }
 
-        template<class PromiseT, typename = std::enable_if_t<traits::IsPromiseV<PromiseT>>>
-        bool await_suspend(coroutine_handle<PromiseT> handler)
+        template<PromiseT PromiseTp>
+        bool await_suspend(coroutine_handle<PromiseTp> handler)
         {
             use_ptr<State<void>> state = StateFuture::AllocState<StateType>(true);
             state->SetValue();
