@@ -7,4 +7,5 @@ foreach(TEST_FILE_PATH ${TEST_FILES})
 
     add_executable(${TEST_FILE_NAME} ${TEST_FILE_PATH})
     target_link_libraries(${TEST_FILE_NAME} PUBLIC libcoroutine)
+    set_property(TARGET ${TEST_FILE_NAME}  PROPERTY CXX_STANDARD 20)
 endforeach(TEST_FILE_PATH)
