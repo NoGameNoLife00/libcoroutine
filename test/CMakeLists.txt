@@ -1,5 +1,5 @@
 set(TEST_FILES "")
-aux_source_directory("${CMAKE_SOURCE_DIR}/test" TEST_FILES)
+aux_source_directory(. TEST_FILES)
 
 foreach(TEST_FILE_PATH ${TEST_FILES})
     string(REGEX REPLACE ".+[/\]([^/\.]+)\\.cpp" "\\1" TEST_FILE_NAME ${TEST_FILE_PATH})
